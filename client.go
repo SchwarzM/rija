@@ -82,7 +82,6 @@ func do_get_issues(c *cli.Context) {
 	parameters := url.Values{}
 	parameters.Add("jql", "assignee="+conf.User+" AND ( status=Open OR status=\"In Progress\" )")
 	Url.RawQuery = parameters.Encode()
-	fmt.Printf("Enc Url %q\n", Url.String())
 	json_str, err := exec.Command(
 		"/usr/bin/curl",
 		"-s",
