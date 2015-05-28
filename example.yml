@@ -1,0 +1,4 @@
+user: username
+pass: password_for_cert
+cert: path_to_sso_cert
+url: hostname_url
