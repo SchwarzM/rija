@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	//"path/filepath"
+	"net/url"
 	"strconv"
 )
 
@@ -75,12 +76,19 @@ func do_print_issues(c *cli.Context) {
 func do_get_issues(c *cli.Context) {
 	get_configure()
 	var resp Response
+	Url, err := url.Parse(conf.Url)
+	check(err)
+	Url.Path += "/rest/api/2/search"
+	parameters := url.Values{}
+	parameters.Add("jql", "assignee="+conf.User+" AND ( status=Open OR status=\"In Progress\" )")
+	Url.RawQuery = parameters.Encode()
+	fmt.Printf("Enc Url %q\n", Url.String())
 	json_str, err := exec.Command(
 		"/usr/bin/curl",
 		"-s",
 		"-E",
 		conf.Cert+":"+conf.Pass,
-		conf.Url+"/rest/api/2/search?jql=assignee="+conf.User+"%20AND%20status=Open",
+		Url.String(),
 	).Output()
 	check(err)
 	err = json.Unmarshal(json_str, &resp)
