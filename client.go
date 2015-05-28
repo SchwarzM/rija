@@ -111,7 +111,7 @@ func do_set_issue(c *cli.Context) {
 		os.Exit(1)
 	}
 	issue := list[index]
-	fmt.Printf("set -gx current_issue %s\n", issue.Key)
+	fmt.Printf("set -Ux current_issue %s\n", issue.Key)
 }
 
 type Conf struct {
