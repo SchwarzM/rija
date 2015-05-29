@@ -11,6 +11,7 @@ import (
 	//"path/filepath"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 var Commands = []cli.Command{
@@ -111,7 +112,11 @@ func do_set_issue(c *cli.Context) {
 		os.Exit(1)
 	}
 	issue := list[index]
-	fmt.Printf("set -Ux current_issue %s\n", issue.Key)
+	if os.Getenv("SHELL").Contains("fish") {
+		fmt.Printf("set -Ux current_issue %s\n", issue.Key)
+	} else {
+		fmt.Printf("export current_issue=%s\n", issue.Key)
+	}
 }
 
 type Conf struct {
