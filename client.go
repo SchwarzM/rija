@@ -112,7 +112,7 @@ func do_set_issue(c *cli.Context) {
 		os.Exit(1)
 	}
 	issue := list[index]
-	if os.Getenv("SHELL").Contains("fish") {
+	if strings.Contains(os.Getenv("SHELL"), "fish") {
 		fmt.Printf("set -Ux current_issue %s\n", issue.Key)
 	} else {
 		fmt.Printf("export current_issue=%s\n", issue.Key)
