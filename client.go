@@ -18,6 +18,14 @@ var Commands = []cli.Command{
 	print_issues,
 	get_issues,
 	set_issue,
+	comment_issue,
+}
+
+var comment_issue = cli.Command{
+	Name:        "comment",
+	Usage:       "Comment on the current_issue",
+	Description: "Comment on the current_issue",
+	Action:      do_comment_issue,
 }
 
 var print_issues = cli.Command{
@@ -104,6 +112,7 @@ func do_set_issue(c *cli.Context) {
 	read_issues()
 	if len(c.Args()) < 1 {
 		println("Need a number of the issue to set")
+		os.Exit(1)
 	}
 	index, err := strconv.Atoi(c.Args()[0])
 	check(err)
@@ -117,6 +126,35 @@ func do_set_issue(c *cli.Context) {
 	} else {
 		fmt.Printf("export current_issue=%s\n", issue.Key)
 	}
+}
+
+func do_comment_issue(c *cli.Context) {
+	get_configure()
+	if len(c.Args()) < 1 {
+		println("Need a comment message to add")
+		os.Exit(1)
+	}
+	message := c.Args()[0]
+	println(message)
+	Url, err := url.Parse(conf.Url)
+	check(err)
+	Url.Path += "/rest/api/2/issue/" + os.Getenv("current_issue") + "/comment"
+	test := "{ \"body\": \"" + message + "\" }"
+	json_str, err := exec.Command(
+		"/usr/bin/curl",
+		"-i",
+		"-X",
+		"POST",
+		"--data",
+		test,
+		"-H",
+		"Content-Type: application/json",
+		"-E",
+		conf.Cert+":"+conf.Pass,
+		Url.String(),
+	).Output()
+	check(err)
+	println(string(json_str))
 }
 
 type Conf struct {
