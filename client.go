@@ -7,7 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	//"path/filepath"
 	"net/url"
 	"strconv"
@@ -19,6 +18,14 @@ var Commands = []cli.Command{
 	get_issues,
 	set_issue,
 	comment_issue,
+	transition_issue,
+}
+
+var transition_issue = cli.Command{
+	Name:        "transition",
+	Usage:       "Transition the current issue",
+	Description: "Displays possible transitions or transitions the issue",
+	Action:      do_trans_issue,
 }
 
 var comment_issue = cli.Command{
@@ -56,10 +63,16 @@ var list []Issue_List
 type Issue_List struct {
 	Key     string
 	Summary string
+	Status  string
+}
+
+type Status struct {
+	Name string
 }
 
 type Issue_Fields struct {
 	Summary string
+	Status  Status
 }
 
 type Issue struct {
@@ -78,7 +91,7 @@ func action(c *cli.Context) {
 func do_print_issues(c *cli.Context) {
 	read_issues()
 	for index, element := range list {
-		fmt.Printf("[%d] %s: %s\n", index, element.Key, element.Summary)
+		fmt.Printf("[%2d] %s: <%11s> %s\n", index, element.Key, element.Status, element.Summary)
 	}
 }
 
@@ -91,18 +104,11 @@ func do_get_issues(c *cli.Context) {
 	parameters := url.Values{}
 	parameters.Add("jql", "assignee="+conf.User+" AND ( status=Open OR status=\"In Progress\" )")
 	Url.RawQuery = parameters.Encode()
-	json_str, err := exec.Command(
-		"/usr/bin/curl",
-		"-s",
-		"-E",
-		conf.Cert+":"+conf.Pass,
-		Url.String(),
-	).Output()
-	check(err)
+	json_str := get_request(Url.String())
 	err = json.Unmarshal(json_str, &resp)
 	check(err)
 	for _, element := range resp.Issues {
-		item := Issue_List{element.Key, element.Fields.Summary}
+		item := Issue_List{element.Key, element.Fields.Summary, element.Fields.Status.Name}
 		list = append(list, item)
 	}
 	write_issues()
@@ -128,6 +134,15 @@ func do_set_issue(c *cli.Context) {
 	}
 }
 
+func do_trans_issue(c *cli.Context) {
+	get_configure()
+	if len(c.Args()) < 1 {
+		do_display_trans()
+	} else {
+		do_trans_update(c.Args()[0])
+	}
+}
+
 func do_comment_issue(c *cli.Context) {
 	get_configure()
 	if len(c.Args()) < 1 {
@@ -139,22 +154,8 @@ func do_comment_issue(c *cli.Context) {
 	Url, err := url.Parse(conf.Url)
 	check(err)
 	Url.Path += "/rest/api/2/issue/" + os.Getenv("current_issue") + "/comment"
-	test := "{ \"body\": \"" + message + "\" }"
-	json_str, err := exec.Command(
-		"/usr/bin/curl",
-		"-i",
-		"-X",
-		"POST",
-		"--data",
-		test,
-		"-H",
-		"Content-Type: application/json",
-		"-E",
-		conf.Cert+":"+conf.Pass,
-		Url.String(),
-	).Output()
-	check(err)
-	println(string(json_str))
+	body := "{ \"body\": \"" + message + "\" }"
+	post_request(Url.String(), body)
 }
 
 type Conf struct {
