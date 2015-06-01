@@ -12,6 +12,6 @@ Commandline tool for getting jira issues assigned to me that are open oder "in p
 
 - ```go get github.com/schwarzm/rija```  
 - ```mkdir -p ~/.config/rija```
-- ```cp example.yml ~/.config/rija/```
+- ```cp example.yml ~/.config/rija/rija.yml```
 - Change the yml to your values
 
